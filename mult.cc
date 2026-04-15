@@ -19,19 +19,19 @@
 
 /**************************************************************************/
 // include
-
 #include <algorithm>
 #include <iostream>
 #include <print>
 #include <random>
-#include <thread>
+#include <span>
+// #include <thread>
 #include <type_traits>
 #include <vector>
 
 /**************************************************************************/
 // headers
 
-void
+unsigned
 getInput ();
 
 void
@@ -40,8 +40,10 @@ printResults ();
 void
 computeAverage ();
 
+template<typename T, typename U>
+  requires std::is_arithmetic_v<T>
 void
-fillRandom ();
+fillRandom (std::span<T> seq, U min, U max, unsigned seed);
 
 void
 calcSumOfSquares ();
@@ -67,19 +69,31 @@ findConfidenceInt ();
 int
 main ()
 {
-  return 0;
+  unsigned N;
+  N = getInput ();
+  using type = float;
+
+  std::vector<type> data (N);
+
+  int min { 1 };
+  int max { 100 };
+  unsigned seed { 1 };
+  fillRandom (std::span<type> { data }, min, max, seed);
+
+  // std::println ("{}", data);
 }
 
 /**************************************************************************/
 // functions
 
 // Needs N from user for amount of data obtained in each column
-void
+unsigned
 getInput ()
 {
-  int N {};
-  std::print ("N ==> ");
-  std::cin >> N;
+  std::print ("Size   ==> ");
+  unsigned n;
+  std::cin >> n;
+  return n;
 }
 
 /*
@@ -94,9 +108,17 @@ template<typename T, typename U>
 void
 fillRandom (std::span<T> seq, U min, U max, unsigned seed)
 {
-  static std::minstd_rand generator (seed);
-  std::uniform_real_distribution<float> distribute (min, max);
-  std::ranges::generate (seq, [&] () { return distribute (generator); });
+  std::minstd_rand gen (0);
+  if constexpr (std::is_floating_point_v<T>)
+  {
+    std::uniform_real_distribution<T> fDistribution (min, max);
+    std::ranges::generate (seq, [&] () { return fDistribution (gen); });
+  }
+  else
+  {
+    std::uniform_int_distribution<int> iDistribution (min, max);
+    std::ranges::generate (seq, [&] () { return iDistribution (gen); });
+  }
 }
 
 // uses jthreads to get average of all 3 columns of data in parallel
@@ -110,10 +132,6 @@ computeAverage (std::vector<float> dataValues)
   float average = total / dataValues.size ();
   return average;
 }
-
-// calculates x, y, and z minus respective averages
-std::vector<float>
-calcColumns (std::vector<float>& dataset, float average);
 
 // Use Jthreads to calculate sum of squares functions in parallel (3)
 // Requires averages from previous threads
