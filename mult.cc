@@ -113,9 +113,7 @@ computeAverage (std::vector<float> dataValues)
 
 // calculates x, y, and z minus respective averages
 std::vector<float>
-calcColumns (std::vector<float>& dataset, float average)
-{
-}
+calcColumns (std::vector<float>& dataset, float average);
 
 // Use Jthreads to calculate sum of squares functions in parallel (3)
 // Requires averages from previous threads
