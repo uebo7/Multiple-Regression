@@ -60,19 +60,23 @@ calcSumOfProducts (std::vector<T> firstValue, std::vector<T> secondValues);
 
 template<typename T>
 T
-calcSlope ();
+calcSlopes (T S11, T S22, T S12, T S1y, T S2y);
 
 template<typename T>
 T
-computePointEstimate ();
+calcFinalSlope (T ybar, T b1, T xbar1, T b2, T xbar2);
 
 template<typename T>
 T
-computeStandardErr ();
+computePointEstimate (T Syy, T b1, T S11, T b2, T S22, T S1y, T S2y, T S12);
 
 template<typename T>
 T
-findConfidenceInt ();
+computeStandardErr (T S, T N, T xbar1, T S22, T xbar2, T S11, T S12);
+
+template<typename T>
+T
+findConfidenceInt (T b, T se);
 
 /**************************************************************************/
 // main
@@ -141,39 +145,49 @@ template<typename T>
 T
 computeAverage (std::vector<T> dataValues)
 {
-  float total {};
-  for (float value : dataValues)
+  T total {};
+  for (T value : dataValues)
     total += value;
 
-  float average = total / dataValues.size ();
+  T average = total / dataValues.size ();
   return average;
 }
 
 // Use Jthreads to calculate sum of squares functions in parallel (3)
 // Requires averages from previous threads
-void
-calcSumOfSquares ();
+template<typename T>
+T
+calcSumOfSquares (std::vector<T> dataValues);
 
 // Use Jthreads to calculate sum of products functions in parallel (3)
-void
-calcSumOfProducts ();
+template<typename T>
+T
+calcSumOfProducts (std::vector<T> firstValue, std::vector<T> secondValues);
 
 // Use Jthreads to calculate slopes and intercept
 // relies on previous data
 
-void
-calcSlope ();
+template<typename T>
+T
+calcSlopes (T S11, T S22, T S12, T S1y, T S2y);
+
+template<typename T>
+T
+calcFinalSlope (T ybar, T b1, T xbar1, T b2, T xbar2);
 
 // Calculate point estimate
 // No threads needed one operation and relies on previous input. Next step
 // relies on this
-void
-computePointEstimate ();
+template<typename T>
+T
+computePointEstimate (T Syy, T b1, T S11, T b2, T S22, T S1y, T S2y, T S12);
 
 // Use Jthreads to compute Standard Error of 3 random variables
-void
-computeStandardErr ();
+template<typename T>
+T
+computeStandardErr (T S, T N, T xbar1, T S22, T xbar2, T S11, T S12);
 
 // Use Jthreads to find confidence interval of Beta
-void
-findConfidenceInt ();
+template<typename T>
+T
+findConfidenceInt (T b, T se);
