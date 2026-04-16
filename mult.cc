@@ -18,13 +18,14 @@
  */
 
 /**************************************************************************/
-// include
 #include <algorithm>
 #include <iostream>
 #include <print>
 #include <random>
 #include <span>
 // #include <thread>
+#include <condition_variable>
+#include <mutex>
 #include <type_traits>
 #include <vector>
 
@@ -42,8 +43,8 @@ T
 computeAverage (std::vector<T> dataValues);
 
 template<typename T>
-std::vector<T>
-findDataValues (std::vector<T> dataValues, T average);
+void
+findDataValues (std::vector<T>& dataValues, const T average);
 
 template<typename T, typename U>
   requires std::is_arithmetic_v<T>
@@ -83,13 +84,28 @@ main ()
   unsigned N;
   N = getInput ();
   using type = float;
+  std::mutex m_mutex;
+  std::condition_variable m_cv;
 
-  std::vector<type> data (N);
+  std::vector<type> x1 (N);
+  std::vector<type> x2 (N);
+  std::vector<type> y (N);
 
-  int min { 1 };
-  int max { 100 };
-  unsigned seed { 1 };
-  fillRandom (std::span<type> { data }, min, max, seed);
+  int min{1};
+  int max{100};
+  unsigned seed{1};
+
+  fillRandom (std::span<type>{x1}, min, max, seed);
+  fillRandom (std::span<type>{x2}, min, max, seed);
+  fillRandom (std::span<type>{y}, min, max, seed);
+
+  {
+    std::jthread averageX1 ([&] ()
+                            { findDataValues (x1, computeAverage (x1)); });
+    std::jthread averageX2 ([&] ()
+                            { findDataValues (x2, computeAverage (x2)); });
+    std::jthread averageY ([&] () { findDataValues (y, computeAverage (y)); });
+  }
 
   // std::println ("{}", data);
 }
@@ -119,7 +135,7 @@ template<typename T, typename U>
 void
 fillRandom (std::span<T> seq, U min, U max, unsigned seed)
 {
-  std::minstd_rand gen (0);
+  std::minstd_rand gen (seed);
   if constexpr (std::is_floating_point_v<T>)
   {
     std::uniform_real_distribution<T> fDistribution (min, max);
@@ -133,15 +149,20 @@ fillRandom (std::span<T> seq, U min, U max, unsigned seed)
 }
 
 template<typename T>
-std::vector<T>
-findDataValues (std::vector<T> dataValues, T average);
-
+void
+findDataValues (std::vector<T>& dataValues, const T average)
+{
+  for (auto& x : dataValues)
+  {
+    x = x - average;
+  }
+}
 // uses jthreads to get average of all 3 columns of data in parallel
 template<typename T>
 T
 computeAverage (std::vector<T> dataValues)
 {
-  float total {};
+  float total{};
   for (float value : dataValues)
     total += value;
 
