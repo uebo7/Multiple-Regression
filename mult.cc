@@ -37,30 +37,41 @@ getInput ();
 void
 printResults ();
 
-void
-computeAverage ();
+template<typename T>
+T
+computeAverage (std::vector<T> dataValues);
+
+template<typename T>
+std::vector<T>
+findDataValues (std::vector<T> dataValues, T average);
 
 template<typename T, typename U>
   requires std::is_arithmetic_v<T>
 void
 fillRandom (std::span<T> seq, U min, U max, unsigned seed);
 
-void
-calcSumOfSquares ();
+template<typename T>
+T
+calcSumOfSquares (std::vector<T> dataValues);
 
-void
-calcSumOfProducts ();
+template<typename T>
+T
+calcSumOfProducts (std::vector<T> firstValue, std::vector<T> secondValues);
 
-void
+template<typename T>
+T
 calcSlope ();
 
-void
+template<typename T>
+T
 computePointEstimate ();
 
-void
+template<typename T>
+T
 computeStandardErr ();
 
-void
+template<typename T>
+T
 findConfidenceInt ();
 
 /**************************************************************************/
@@ -121,9 +132,14 @@ fillRandom (std::span<T> seq, U min, U max, unsigned seed)
   }
 }
 
+template<typename T>
+std::vector<T>
+findDataValues (std::vector<T> dataValues, T average);
+
 // uses jthreads to get average of all 3 columns of data in parallel
-float
-computeAverage (std::vector<float> dataValues)
+template<typename T>
+T
+computeAverage (std::vector<T> dataValues)
 {
   float total {};
   for (float value : dataValues)
