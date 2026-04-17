@@ -25,8 +25,13 @@
 #include <random>
 #include <span>
 // #include <thread>
+#include <execution>
 #include <type_traits>
 #include <vector>
+
+// local include
+
+#include "ThreadSafeQueue.hpp"
 
 /**************************************************************************/
 // headers
@@ -138,7 +143,16 @@ fillRandom (std::span<T> seq, U min, U max, unsigned seed)
 
 template<typename T>
 std::vector<T>
-findDataValues (std::vector<T> dataValues, T average);
+findDataValues (std::vector<T>& dataValues, T average)
+{
+  std::transform (std::execution::par,
+                  dataValues.begin (),
+                  dataValues.end (),
+                  dataValues.begin (),
+                  [average] (T value) { return value - average; });
+
+  return dataValues;
+}
 
 // uses jthreads to get average of all 3 columns of data in parallel
 template<typename T>
@@ -157,7 +171,17 @@ computeAverage (std::vector<T> dataValues)
 // Requires averages from previous threads
 template<typename T>
 T
-calcSumOfSquares (std::vector<T> dataValues);
+calcSumOfSquares (std::vector<T> dataValues)
+{
+  T total {};
+  for (auto value : dataValues)
+  {
+    T squared = std::pow (value, 2);
+    total += squared;
+  }
+
+  return total;
+}
 
 // Use Jthreads to calculate sum of products functions in parallel (3)
 template<typename T>
