@@ -95,10 +95,13 @@ main ()
 
   std::vector<type> data (N);
 
-  int min { 1 };
-  int max { 100 };
-  unsigned seed { 1 };
-  fillRandom (std::span<type> { data }, min, max, seed);
+  int min{1};
+  int max{100};
+  unsigned seed{1};
+  fillRandom (std::span<type>{data}, min, max, seed);
+
+  //queue of pairs for averages (which vector, average)
+  ThreadSafeQueue<std::pair<type, type>> averages;
 
   // std::println ("{}", data);
 }
@@ -145,9 +148,7 @@ template<typename T>
 std::vector<T>
 findDataValues (std::vector<T>& dataValues, T average)
 {
-  std::transform (std::execution::par,
-                  dataValues.begin (),
-                  dataValues.end (),
+  std::transform (std::execution::par, dataValues.begin (), dataValues.end (),
                   dataValues.begin (),
                   [average] (T value) { return value - average; });
 
@@ -159,7 +160,7 @@ template<typename T>
 T
 computeAverage (std::vector<T> dataValues)
 {
-  T total {};
+  T total{};
   for (T value : dataValues)
     total += value;
 
@@ -173,7 +174,8 @@ template<typename T>
 T
 calcSumOfSquares (std::vector<T> dataValues)
 {
-  T total {};
+
+  T total{};
   for (auto value : dataValues)
   {
     T squared = std::pow (value, 2);
