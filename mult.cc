@@ -93,15 +93,41 @@ main ()
   N = getInput ();
   using type = float;
 
-  std::vector<type> data (N);
+  std::vector<type> x1 (N);
+  std::vector<type> x2 (N);
+  std::vector<type> y (N);
 
   int min{1};
   int max{100};
   unsigned seed{1};
-  fillRandom (std::span<type>{data}, min, max, seed);
+  fillRandom (std::span<type>{x1}, min, max, seed);
+  fillRandom (std::span<type>{x2}, min, max, seed);
+  fillRandom (std::span<type>{y}, min, max, seed);
+
+
+  ThreadSafeQueue<std::pair<int, std::vector<type>>> averages;
+
+  std::jthread t1([&] {
+    auto avg = computeAverage(x1);
+    x1 = findDataValues(x1, avg);
+    averages.push({1, x1});
+  });
+
+  std::jthread t2([&] {
+    auto avg = computeAverage(x2);
+    x2 = findDataValues(x2, avg);
+    averages.push({2, x2});
+  });
+
+  std::jthread t3([&] {
+    auto avg = computeAverage(y);
+    y = findDataValues(y, avg);
+    averages.push({3, y});
+  });
+  
 
   //queue of pairs for averages (which vector, average)
-  ThreadSafeQueue<std::pair<type, type>> averages;
+  
 
   // std::println ("{}", data);
 }
@@ -131,7 +157,7 @@ template<typename T, typename U>
 void
 fillRandom (std::span<T> seq, U min, U max, unsigned seed)
 {
-  std::minstd_rand gen (0);
+  std::minstd_rand gen (seed);
   if constexpr (std::is_floating_point_v<T>)
   {
     std::uniform_real_distribution<T> fDistribution (min, max);
