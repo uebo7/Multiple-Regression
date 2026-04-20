@@ -65,7 +65,9 @@ main ()
   int min{1};
   int max{100};
   unsigned seed{1};
-  fillRandom (std::span<type>{data}, min, max, seed);
+  fillRandom (std::span<type>{x1}, min, max, seed);
+  fillRandom (std::span<type>{x2}, min, max, seed);
+  fillRandom (std::span<type>{y}, min, max, seed);
 
   {
     std::jthread t1 (
