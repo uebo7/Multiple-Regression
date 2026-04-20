@@ -9,6 +9,7 @@
  * Assumptions:
     - 3 sets of data
     - N is equal in every data set
+    - alpha is between .01 and .99
 
  * Notes:
     - substituting ta/2 for z score
@@ -19,6 +20,7 @@
 
 /**************************************************************************/
 // include
+#include <boost/math/distributions/students_t.hpp>
 #include <cmath>
 #include <iostream>
 #include <print>
@@ -34,7 +36,13 @@
 /**************************************************************************/
 // headers
 
-unsigned
+struct Input
+{
+  unsigned n;
+  double alpha;
+};
+
+Input
 getInput ();
 
 void
@@ -46,8 +54,8 @@ printResults ();
 int
 main ()
 {
-  unsigned N;
-  N = getInput ();
+  auto input = getInput ();
+  unsigned N = input.n;
   using type = float;
 
   std::vector<type> x1 (N);
@@ -96,17 +104,18 @@ main ()
 // functions
 
 // Needs N from user for amount of data obtained in each column
-unsigned
+// Needs alpha for confidence interval
+Input
 getInput ()
 {
+  Input in {};
   std::print ("Size   ==> ");
-  unsigned n;
-  std::cin >> n;
-  return n;
+  std::cin >> in.n;
+  std::print ("\nalpha  ==> ");
+  std::cin >> in.alpha;
+  return in;
 }
 
-/*
- * print the confidence interval
- */
+// print the confidence interval
 void
 printResults ();

@@ -5,6 +5,7 @@
  */
 
 #include <algorithm>
+#include <boost/math/distributions/students_t.hpp>
 #include <cmath>
 #include <cstddef>
 #include <execution>
@@ -179,7 +180,14 @@ computeStandardErr (T S, int N, T xbar1, T S22, T xbar2, T S11, T S12)
 // Use Jthreads to find confidence interval of Beta
 template<typename T>
 confidenceInterval<T>
-findConfidenceInt (T b, T se)
+findConfidenceInt (T b, T se, T B, double alpha)
 {
-  // download boost math library
+  int df { 3 };
+  boost::math::students_t dist (df);
+  double tAlphaOver2 = quantile (boost::math::complement (dist, alpha / 2));
+
+  confidenceInterval<T> ci = { b - tAlphaOver2 * se * B,
+                               b + tAlphaOver2 * se * B };
+
+  return ci;
 }
