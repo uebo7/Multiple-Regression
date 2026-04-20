@@ -21,10 +21,10 @@ LINK := $(CXX)
 LDFLAGS := 
 
 # Library paths, prefaced with "-L". Usually none.
-LDPATHS := 
+LDPATHS :=  
 
 # Libraries we're using, prefaced with "-l".
-LDLIBS :=
+LDLIBS := -ltbb -pthread
 
 # Executable name. Needs to be the basename of your driver
 #   file. I.e., your driver must be named $(EXEC).cc
