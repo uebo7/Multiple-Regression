@@ -70,7 +70,7 @@ findDataValues (std::vector<T>& dataValues, T average)
 // uses jthreads to get average of all 3 columns of data in parallel
 template<typename T>
 T
-computeAverage (std::vector<T> dataValues)
+computeAverage (const std::vector<T> dataValues)
 {
   T total{};
   for (T value : dataValues)
@@ -115,21 +115,16 @@ calcSumOfProducts (const std::vector<T>& firstValue,
 // relies on previous data
 
 template<typename T>
-T
-calcSlopes (T S11, T S22, T S12, T S1y, T S2y, bool b)
+std::pair<T, T>
+calcSlopes (const T S11, T S22, T S12, T S1y, T S2y)
 {
   const T denominator = (S11 * S22 - S12 * S12);
   T slope;
-  if (b)
-  {
-    slope = {(S1y * S22 - (S2y * S12)) / denominator};
-  }
-  else
-  {
-    slope = {(S2y * S11 - (S1y * S12)) / denominator};
-  }
 
-  return slope;
+  T b1 = (S1y * S22 - (S2y * S12)) / denominator;
+  T b2 = (S2y * S11 - (S1y * S12)) / denominator;
+
+  return std::pair<T, T> (b1, b2);
 }
 
 template<typename T>
