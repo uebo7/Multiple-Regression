@@ -57,14 +57,12 @@ fillRandom (std::span<T> seq, U min, U max, unsigned seed)
 }
 
 template<typename T>
-std::vector<T>
+void
 findDataValues (std::vector<T>& dataValues, T average)
 {
   std::transform (std::execution::par, dataValues.begin (), dataValues.end (),
                   dataValues.begin (),
                   [average] (T value) { return value - average; });
-
-  return dataValues;
 }
 
 // uses jthreads to get average of all 3 columns of data in parallel
@@ -119,7 +117,6 @@ std::pair<T, T>
 calcSlopes (const T S11, T S22, T S12, T S1y, T S2y)
 {
   const T denominator = (S11 * S22 - S12 * S12);
-  T slope;
 
   T b1 = (S1y * S22 - (S2y * S12)) / denominator;
   T b2 = (S2y * S11 - (S1y * S12)) / denominator;
@@ -132,7 +129,7 @@ T
 calcFinalSlope (const T ybar, const T b1, const T xbar1, const T b2,
                 const T xbar2)
 {
-  return ybar - b1 * xbar1 - b2 * xbar2;
+  return ybar - (b1 * xbar1) - (b2 * xbar2);
 }
 
 // Calculate point estimate
