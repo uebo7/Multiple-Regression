@@ -67,7 +67,54 @@ main ()
   unsigned seed{1};
   fillRandom (std::span<type>{data}, min, max, seed);
 
-  // std::println ("{}", data);
+  {
+    std::jthread t1 (
+      [&]
+      {
+        auto avg1 = computeAverage (x1);
+        x1 = findDataValues (x1, avg1);
+      });
+
+    std::jthread t2 (
+      [&]
+      {
+        auto avg2 = computeAverage (x2);
+        x2 = findDataValues (x2, avg2);
+      });
+
+    std::jthread t3 (
+      [&]
+      {
+        auto avg3 = computeAverage (y);
+        y = findDataValues (y, avg3);
+      });
+  }
+  type sum1, sum2, sum3;
+  type prod1, prod2, prod3;
+  {
+    std::jthread sumsquare1 ([&] { sum1 = calcSumOfSquares (x1); });
+    std::jthread sumsquare2 ([&] { sum2 = calcSumOfSquares (x2); });
+    std::jthread sumsquare3 ([&] { sum3 = calcSumOfSquares (y); });
+
+    std::jthread sumproduct1 ([&] { prod1 = calcSumOfProducts (x1, x2); });
+    std::jthread sumproduct2 ([&] { prod2 = calcSumOfProducts (x2, y); });
+    std::jthread sumproduct3 ([&] { prod3 = calcSumOfProducts (x1, y); });
+  }
+  type slop1, slop2;
+  {
+    //bools at the end are to determine which slope equation to use
+    std::jthread slope1 (
+      [&] { slop1 = calcSlopes (sum1, sum2, prod1, prod2, prod3, true); });
+    std::jthread slope2 (
+      [&] { slop2 = calcSlopes (sum1, sum2, prod1, prod3, prod3, false); });
+  }
+  std::println ("{}", x1);
+  std::println ("{}", x2);
+  std::println ("{}", y);
+
+  std::println ("{}", prod1);
+  std::println ("{}", prod2);
+  std::println ("{}", prod3);
 }
 
 /**************************************************************************/
