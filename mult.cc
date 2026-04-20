@@ -30,7 +30,7 @@
 
 // local include
 
-#include "ThreadSafeQueue.hpp"
+// #include "ThreadSafeQueue.hpp"
 #include "mult.hpp"
 
 /**************************************************************************/
@@ -62,33 +62,33 @@ main ()
   std::vector<type> x2 (N);
   std::vector<type> y (N);
 
-  int min{1};
-  int max{100};
-  unsigned seed{1};
-  fillRandom (std::span<type>{x1}, min, max, seed);
-  fillRandom (std::span<type>{x2}, min, max, seed);
-  fillRandom (std::span<type>{y}, min, max, seed);
+  int min { 1 };
+  int max { 100 };
+  unsigned seed { 1 };
+  fillRandom (std::span<type> { x1 }, min, max, seed);
+  fillRandom (std::span<type> { x2 }, min, max, seed);
+  fillRandom (std::span<type> { y }, min, max, seed);
 
   {
     std::jthread t1 (
       [&]
       {
         auto avg1 = computeAverage (x1);
-        x1 = findDataValues (x1, avg1);
+        findDataValues (x1, avg1);
       });
 
     std::jthread t2 (
       [&]
       {
         auto avg2 = computeAverage (x2);
-        x2 = findDataValues (x2, avg2);
+        findDataValues (x2, avg2);
       });
 
     std::jthread t3 (
       [&]
       {
         auto avg3 = computeAverage (y);
-        y = findDataValues (y, avg3);
+        findDataValues (y, avg3);
       });
   }
   type sum1, sum2, sum3;
@@ -104,15 +104,15 @@ main ()
   }
   type slop1, slop2;
   {
-    //bools at the end are to determine which slope equation to use
+    // bools at the end are to determine which slope equation to use
     std::jthread slope1 (
       [&] { slop1 = calcSlopes (sum1, sum2, prod1, prod2, prod3, true); });
     std::jthread slope2 (
       [&] { slop2 = calcSlopes (sum1, sum2, prod1, prod3, prod3, false); });
   }
-  std::println ("{}", x1);
-  std::println ("{}", x2);
-  std::println ("{}", y);
+  // std::println ("{}", x1);
+  // std::println ("{}", x2);
+  // std::println ("{}", y);
 
   std::println ("{}", prod1);
   std::println ("{}", prod2);
@@ -127,10 +127,10 @@ main ()
 Input
 getInput ()
 {
-  Input in{};
+  Input in {};
   std::print ("Size   ==> ");
   std::cin >> in.n;
-  std::print ("\nalpha  ==> ");
+  std::print ("alpha  ==> ");
   std::cin >> in.alpha;
   return in;
 }
