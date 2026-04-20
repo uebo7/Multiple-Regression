@@ -19,19 +19,17 @@
 
 /**************************************************************************/
 // include
-#include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <print>
-#include <random>
 #include <span>
-// #include <thread>
-#include <execution>
-#include <type_traits>
+#include <thread>
 #include <vector>
 
 // local include
 
 #include "ThreadSafeQueue.hpp"
+#include "mult.hpp"
 
 /**************************************************************************/
 // headers
@@ -41,47 +39,6 @@ getInput ();
 
 void
 printResults ();
-
-template<typename T>
-T
-computeAverage (std::vector<T> dataValues);
-
-template<typename T>
-std::vector<T>
-findDataValues (std::vector<T> dataValues, T average);
-
-template<typename T, typename U>
-  requires std::is_arithmetic_v<T>
-void
-fillRandom (std::span<T> seq, U min, U max, unsigned seed);
-
-template<typename T>
-T
-calcSumOfSquares (std::vector<T> dataValues);
-
-template<typename T>
-T
-calcSumOfProducts (std::vector<T> firstValue, std::vector<T> secondValues);
-
-template<typename T>
-T
-calcSlopes (T S11, T S22, T S12, T S1y, T S2y);
-
-template<typename T>
-T
-calcFinalSlope (T ybar, T b1, T xbar1, T b2, T xbar2);
-
-template<typename T>
-T
-computePointEstimate (T Syy, T b1, T S11, T b2, T S22, T S1y, T S2y, T S12);
-
-template<typename T>
-T
-computeStandardErr (T S, T N, T xbar1, T S22, T xbar2, T S11, T S12);
-
-template<typename T>
-T
-findConfidenceInt (T b, T se);
 
 /**************************************************************************/
 // main
@@ -97,37 +54,40 @@ main ()
   std::vector<type> x2 (N);
   std::vector<type> y (N);
 
-  int min{1};
-  int max{100};
-  unsigned seed{1};
-  fillRandom (std::span<type>{x1}, min, max, seed);
-  fillRandom (std::span<type>{x2}, min, max, seed);
-  fillRandom (std::span<type>{y}, min, max, seed);
-
+  int min { 1 };
+  int max { 100 };
+  unsigned seed { 1 };
+  fillRandom (std::span<type> { x1 }, min, max, seed);
+  fillRandom (std::span<type> { x2 }, min, max, seed);
+  fillRandom (std::span<type> { y }, min, max, seed);
 
   ThreadSafeQueue<std::pair<int, std::vector<type>>> averages;
 
-  std::jthread t1([&] {
-    auto avg = computeAverage(x1);
-    x1 = findDataValues(x1, avg);
-    averages.push({1, x1});
-  });
+  std::jthread t1 (
+    [&]
+    {
+      auto avg = computeAverage (x1);
+      x1 = findDataValues (x1, avg);
+      averages.push ({ 1, x1 });
+    });
 
-  std::jthread t2([&] {
-    auto avg = computeAverage(x2);
-    x2 = findDataValues(x2, avg);
-    averages.push({2, x2});
-  });
+  std::jthread t2 (
+    [&]
+    {
+      auto avg = computeAverage (x2);
+      x2 = findDataValues (x2, avg);
+      averages.push ({ 2, x2 });
+    });
 
-  std::jthread t3([&] {
-    auto avg = computeAverage(y);
-    y = findDataValues(y, avg);
-    averages.push({3, y});
-  });
-  
+  std::jthread t3 (
+    [&]
+    {
+      auto avg = computeAverage (y);
+      y = findDataValues (y, avg);
+      averages.push ({ 3, y });
+    });
 
-  //queue of pairs for averages (which vector, average)
-  
+  // queue of pairs for averages (which vector, average)
 
   // std::println ("{}", data);
 }
@@ -150,96 +110,3 @@ getInput ()
  */
 void
 printResults ();
-
-// fill each column with "N" random data values (range TBD)
-template<typename T, typename U>
-  requires std::is_arithmetic_v<T>
-void
-fillRandom (std::span<T> seq, U min, U max, unsigned seed)
-{
-  std::minstd_rand gen (seed);
-  if constexpr (std::is_floating_point_v<T>)
-  {
-    std::uniform_real_distribution<T> fDistribution (min, max);
-    std::ranges::generate (seq, [&] () { return fDistribution (gen); });
-  }
-  else
-  {
-    std::uniform_int_distribution<int> iDistribution (min, max);
-    std::ranges::generate (seq, [&] () { return iDistribution (gen); });
-  }
-}
-
-template<typename T>
-std::vector<T>
-findDataValues (std::vector<T>& dataValues, T average)
-{
-  std::transform (std::execution::par, dataValues.begin (), dataValues.end (),
-                  dataValues.begin (),
-                  [average] (T value) { return value - average; });
-
-  return dataValues;
-}
-
-// uses jthreads to get average of all 3 columns of data in parallel
-template<typename T>
-T
-computeAverage (std::vector<T> dataValues)
-{
-  T total{};
-  for (T value : dataValues)
-    total += value;
-
-  T average = total / dataValues.size ();
-  return average;
-}
-
-// Use Jthreads to calculate sum of squares functions in parallel (3)
-// Requires averages from previous threads
-template<typename T>
-T
-calcSumOfSquares (std::vector<T> dataValues)
-{
-
-  T total{};
-  for (auto value : dataValues)
-  {
-    T squared = std::pow (value, 2);
-    total += squared;
-  }
-
-  return total;
-}
-
-// Use Jthreads to calculate sum of products functions in parallel (3)
-template<typename T>
-T
-calcSumOfProducts (std::vector<T> firstValue, std::vector<T> secondValues);
-
-// Use Jthreads to calculate slopes and intercept
-// relies on previous data
-
-template<typename T>
-T
-calcSlopes (T S11, T S22, T S12, T S1y, T S2y);
-
-template<typename T>
-T
-calcFinalSlope (T ybar, T b1, T xbar1, T b2, T xbar2);
-
-// Calculate point estimate
-// No threads needed one operation and relies on previous input. Next step
-// relies on this
-template<typename T>
-T
-computePointEstimate (T Syy, T b1, T S11, T b2, T S22, T S1y, T S2y, T S12);
-
-// Use Jthreads to compute Standard Error of 3 random variables
-template<typename T>
-T
-computeStandardErr (T S, T N, T xbar1, T S22, T xbar2, T S11, T S12);
-
-// Use Jthreads to find confidence interval of Beta
-template<typename T>
-T
-findConfidenceInt (T b, T se);
