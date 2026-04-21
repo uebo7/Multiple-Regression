@@ -14,6 +14,7 @@
 #include <random>
 #include <span>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 template<typename T>
@@ -25,7 +26,7 @@ struct StandardErrors
 };
 
 template<typename T>
-struct confidenceInterval
+struct ConfidenceInterval
 {
   T lower;
   T upper;
@@ -160,7 +161,7 @@ computeStandardErr (T S, int N, T xbar1, T S22, T xbar2, T S11, T S12)
   const T denominator = S11 * S22 - S12 * S12;
 
   StandardErrors<T> se = {
-    S * (std::sqrt (1 / N +
+    S * (std::sqrt (T (1) / N +
                     (xbar1 * S22 + xbar2 * S11 - 2 * xbar1 * xbar2 * S12) /
                       denominator)),
     S * (std::sqrt (S22 / denominator)),
@@ -172,14 +173,14 @@ computeStandardErr (T S, int N, T xbar1, T S22, T xbar2, T S11, T S12)
 
 // Use Jthreads to find confidence interval of Beta
 template<typename T>
-confidenceInterval<T>
+ConfidenceInterval<T>
 findConfidenceInt (T b, T se, double alpha, int N)
 {
   int df { N - 3 };
   boost::math::students_t dist (df);
   double tAlphaOver2 = quantile (boost::math::complement (dist, alpha / 2));
 
-  confidenceInterval<T> ci = { b - tAlphaOver2 * se, b + tAlphaOver2 * se };
+  ConfidenceInterval<T> ci = { b - tAlphaOver2 * se, b + tAlphaOver2 * se };
 
   return ci;
 }

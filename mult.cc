@@ -8,11 +8,12 @@
 
  * Assumptions:
     - 3 sets of data
-    - N is equal in every data set
+    - N is equal in every data set (vector)
+    - N > 3
+    - denominators can't be 0
     - alpha is between .01 and .99
 
  * Notes:
-    - substituting ta/2 for z score
     - Data minus average can be calculated in parallel and in a separate
     function to make it possible to calculate the sum of squares and products in
     parallel. This allows us to use 6 threads in parallel
