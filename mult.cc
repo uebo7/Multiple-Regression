@@ -62,12 +62,12 @@ main ()
   std::vector<type> x2 (N);
   std::vector<type> y (N);
 
-  int min{1};
-  int max{100};
-  unsigned seed{1};
-  fillRandom (std::span<type>{x1}, min, max, seed);
-  fillRandom (std::span<type>{x2}, min, max, seed);
-  fillRandom (std::span<type>{y}, min, max, seed);
+  int min { 1 };
+  int max { 100 };
+  unsigned seed { 1 };
+  fillRandom (std::span<type> { x1 }, min, max, seed);
+  fillRandom (std::span<type> { x2 }, min, max, seed);
+  fillRandom (std::span<type> { y }, min, max, seed);
 
   type avg1, avg2, avg3;
   {
@@ -106,9 +106,9 @@ main ()
   auto [b1, b2] = calcSlopes (sum1, sum2, prod1, prod2, prod3);
   type finalSlope;
   finalSlope = calcFinalSlope (avg3, b1, avg1, b2, avg2);
-  //point estimate
-  type point =
-    computePointEstimate (sum3, b1, sum1, b2, sum2, prod2, prod3, prod1, N);
+  // point estimate
+  //  type point =
+  computePointEstimate (sum3, b1, sum1, b2, sum2, prod2, prod3, prod1, N);
 
   // std::println ("{}", x1);
   // std::println ("{}", x2);
@@ -132,7 +132,7 @@ main ()
 Input
 getInput ()
 {
-  Input in{};
+  Input in {};
   std::print ("Size   ==> ");
   std::cin >> in.n;
   std::print ("alpha  ==> ");

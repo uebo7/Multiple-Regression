@@ -49,6 +49,17 @@ fillRandom (std::span<T> seq, U min, U max, unsigned seed)
   }
 }
 
+// uses jthreads to get average of all 3 columns of data in parallel
+template<typename T>
+T
+computeAverage (const std::vector<T>& dataValues)
+{
+  T total = std::reduce (
+    std::execution::par, dataValues.begin (), dataValues.end (), T {});
+
+  return total / dataValues.size ();
+}
+
 template<typename T>
 void
 findDataValues (std::vector<T>& dataValues, T average)
@@ -60,29 +71,18 @@ findDataValues (std::vector<T>& dataValues, T average)
                   [average] (T value) { return value - average; });
 }
 
-// uses jthreads to get average of all 3 columns of data in parallel
-template<typename T>
-T
-computeAverage (const std::vector<T>& dataValues)
-{
-  T total = std::reduce (
-    std::execution::par, dataValues.begin (), dataValues.end (), T {});
-
-  return total;
-}
-
 // Use Jthreads to calculate sum of squares functions in parallel (3)
 // Requires averages from previous threads
 template<typename T>
 T
-calcSumOfSquares (const std::vector<T> dataValues)
+calcSumOfSquares (const std::vector<T>& dataValues)
 {
   T total = std::transform_reduce (std::execution::par,
                                    dataValues.begin (),
                                    dataValues.end (),
                                    T {},
                                    std::plus<> (),
-                                   [] (T v) { return v * v; });
+                                   [] (T value) { return value * value; });
 
   return total;
 }
@@ -173,9 +173,9 @@ computeStandardErr (T S, int N, T xbar1, T S22, T xbar2, T S11, T S12)
 // Use Jthreads to find confidence interval of Beta
 template<typename T>
 confidenceInterval<T>
-findConfidenceInt (T b, T se, double alpha)
+findConfidenceInt (T b, T se, double alpha, int N)
 {
-  int df { 3 };
+  int df { N - 3 };
   boost::math::students_t dist (df);
   double tAlphaOver2 = quantile (boost::math::complement (dist, alpha / 2));
 
