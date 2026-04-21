@@ -53,9 +53,7 @@ template<typename T>
 void
 findDataValues (std::vector<T>& dataValues, T average)
 {
-  std::transform (std::execution::par,
-                  dataValues.begin (),
-                  dataValues.end (),
+  std::transform (std::execution::par, dataValues.begin (), dataValues.end (),
                   dataValues.begin (),
                   [average] (T value) { return value - average; });
 }
@@ -65,8 +63,8 @@ template<typename T>
 T
 computeAverage (const std::vector<T>& dataValues)
 {
-  T total = std::reduce (
-    std::execution::par, dataValues.begin (), dataValues.end (), T {});
+  T total = std::reduce (std::execution::par, dataValues.begin (),
+                         dataValues.end (), T{});
 
   return total;
 }
@@ -77,11 +75,8 @@ template<typename T>
 T
 calcSumOfSquares (const std::vector<T> dataValues)
 {
-  T total = std::transform_reduce (std::execution::par,
-                                   dataValues.begin (),
-                                   dataValues.end (),
-                                   T {},
-                                   std::plus<> (),
+  T total = std::transform_reduce (std::execution::par, dataValues.begin (),
+                                   dataValues.end (), T{}, std::plus<> (),
                                    [] (T v) { return v * v; });
 
   return total;
@@ -94,13 +89,9 @@ calcSumOfProducts (const std::vector<T>& firstValue,
                    const std::vector<T>& secondValue)
 {
   const size_t n = std::min (firstValue.size (), secondValue.size ());
-  T total = std::transform_reduce (std::execution::par,
-                                   firstValue.begin (),
-                                   firstValue.begin () + n,
-                                   secondValue.begin (),
-                                   T {},
-                                   std::plus<> {},
-                                   std::multiplies<> {});
+  T total = std::transform_reduce (
+    std::execution::par, firstValue.begin (), firstValue.begin () + n,
+    secondValue.begin (), T{}, std::plus<>{}, std::multiplies<>{});
 
   return total;
 }
@@ -122,10 +113,7 @@ calcSlopes (const T S11, T S22, T S12, T S1y, T S2y)
 
 template<typename T>
 T
-calcFinalSlope (const T ybar,
-                const T b1,
-                const T xbar1,
-                const T b2,
+calcFinalSlope (const T ybar, const T b1, const T xbar1, const T b2,
                 const T xbar2)
 {
   return ybar - (b1 * xbar1) - (b2 * xbar2);
@@ -136,14 +124,7 @@ calcFinalSlope (const T ybar,
 // relies on this
 template<typename T>
 T
-computePointEstimate (T Syy,
-                      T b1,
-                      T S11,
-                      T b2,
-                      T S22,
-                      T S1y,
-                      T S2y,
-                      T S12,
+computePointEstimate (T Syy, T b1, T S11, T b2, T S22, T S1y, T S2y, T S12,
                       int N)
 {
   T SSE = Syy + b1 * b1 * S11 + b2 * b2 * S22 - 2 * b1 * S1y - 2 * b2 * S2y +
@@ -175,12 +156,12 @@ template<typename T>
 confidenceInterval<T>
 findConfidenceInt (T b, T se, T B, double alpha)
 {
-  int df { 3 };
+  int df{3};
   boost::math::students_t dist (df);
   double tAlphaOver2 = quantile (boost::math::complement (dist, alpha / 2));
 
-  confidenceInterval<T> ci = { b - tAlphaOver2 * se * B,
-                               b + tAlphaOver2 * se * B };
+  confidenceInterval<T> ci = {b - tAlphaOver2 * se * B,
+                              b + tAlphaOver2 * se * B};
 
   return ci;
 }
