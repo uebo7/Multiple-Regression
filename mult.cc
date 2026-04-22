@@ -48,11 +48,11 @@ getInput ();
 
 template<typename T>
 void
-runParallel (std::vector<T> x1, std::vector<T> x2, std::vector<T> y);
+runParallel (std::vector<T> x1, std::vector<T> x2, std::vector<T> y, Input in);
 
 template<typename T>
 void
-runSerial (std::vector<T> x1, std::vector<T> x2, std::vector<T> y);
+runSerial (std::vector<T> x1, std::vector<T> x2, std::vector<T> y, Input in);
 
 void
 printResults ();
@@ -78,21 +78,7 @@ main ()
   fillRandom (std::span<type>{x2}, min, max, seed);
   fillRandom (std::span<type>{y}, min, max, seed);
 
-  runParallel (x1, x2, y);
-  runSerial (x1, x2, y);
-
-  // std::println ("{}", x1);
-  // std::println ("{}", x2);
-  // std::println ("{}", y);
-
-  std::println ("prod1: {}", prod1);
-  std::println ("prod2: {}", prod2);
-  std::println ("prod3: {}", prod3);
-
-  std::println ("b1: {}", b1);
-  std::println ("b2: {}", b2);
-
-  std::println ("finalSlope: {}", finalSlope);
+  runParallel (x1, x2, y, input);
 }
 
 /**************************************************************************/
@@ -113,11 +99,11 @@ getInput ()
 
 template<typename T>
 void
-runParallel (std::vector<T> x1, std::vector<T> x2, std::vector<T> y)
+runParallel (std::vector<T> x1, std::vector<T> x2, std::vector<T> y, Input in)
 {
   Timer timer;
   timer.start ();
-  type avg1, avg2, avg3;
+  T avg1, avg2, avg3;
   {
     std::jthread t1 (
       [&]
@@ -154,19 +140,31 @@ runParallel (std::vector<T> x1, std::vector<T> x2, std::vector<T> y)
   finalSlope = calcFinalSlope (avg3, b1, avg1, b2, avg2);
   //point estimate
   T point =
-    computePointEstimate (sum3, b1, sum1, b2, sum2, prod2, prod3, prod1, N);
+    computePointEstimate (sum3, b1, sum1, b2, sum2, prod2, prod3, prod1, in.n);
+  StandardErrors<T> standardErr =
+    computeStandardErr (point, in.n, avg1, sum2, avg2, sum1, prod1);
+  confidenceInterval<T> ce1, ce2, ce3;
 
+  {
+    std::jthread confidenceInterval1 (
+      [&] { ce1 = findConfidenceInt (b1, standardErr->B0, in.alpha, in.n); });
+    std::jthread confidenceInterval2 (
+      [&] { ce2 = findConfidenceInt (b2, standardErr->B1, in.alpha, in.n); });
+    std::jthread confidenceInterval3 (
+      [&]
+      {
+        ce3 = findConfidenceInt (finalSlope, standardErr->B2, in.alpha, in.n);
+      });
+  }
   timer.stop ();
-  auto time = timer.getElapsedTime ()
-    :
+  double time = timer.getElapsedMs ();
 
-    printResults ()
-    :
+  printResults (ce1, ce2, ce3, time);
 }
 
 template<typename T>
 void
-runSerial (std::vector<T> x1, std::vector<T> x2, std::vector<T> y)
+runSerial (std::vector<T> x1, std::vector<T> x2, std::vector<T> y, Input in)
 {
   Timer timer;
   timer.start ();
@@ -189,7 +187,7 @@ runSerial (std::vector<T> x1, std::vector<T> x2, std::vector<T> y)
   T finalSlope = calcFinalSlope (avg3, b1, avg1, b2, avg2);
   //point estimate
   T point =
-    computePointEstimate (sum3, b1, sum1, b2, sum2, prod2, prod3, prod1, N);
+    computePointEstimate (sum3, b1, sum1, b2, sum2, prod2, prod3, prod1, in.n);
 
   timer.stop ();
   timer.getElapsedMs ();
@@ -197,5 +195,13 @@ runSerial (std::vector<T> x1, std::vector<T> x2, std::vector<T> y)
 }
 
 // print the confidence interval
+template<typename T>
 void
-printResults ();
+printResults (const confidenceInterval<T> ce1, const confidenceInterval<T> ce2,
+              const confidenceInterval<T> ce3, const double time)
+{
+  std::println ("{} < B0 < {}", ce1->lower, ce1->upper);
+  std::println ("{} < B1 < {}", ce2->lower, ce2->upper);
+  std::println ("{} < B2 < {}", ce3->lower, ce3->upper);
+  std::println ("Time:  {}\n", time);
+}
