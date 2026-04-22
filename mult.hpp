@@ -7,8 +7,6 @@
 #include <algorithm>
 #include <boost/math/distributions/students_t.hpp>
 #include <cmath>
-#include <execution>
-#include <numeric>
 #include <random>
 #include <ranges>
 #include <span>
@@ -54,9 +52,11 @@ template<typename T>
 T
 computeAverage (const std::vector<T>& dataValues)
 {
-  T total = std::reduce (
-    std::execution::par, dataValues.begin (), dataValues.end (), T {});
-
+  T total {};
+  for (T value : dataValues)
+  {
+    total += value;
+  }
   return total / dataValues.size ();
 }
 
@@ -64,11 +64,12 @@ template<typename T>
 void
 findDataValues (std::vector<T>& dataValues, T average)
 {
-  std::transform (std::execution::par,
-                  dataValues.begin (),
-                  dataValues.end (),
-                  dataValues.begin (),
-                  [average] (T value) { return value - average; });
+  T total {};
+
+  for (T value : dataValues)
+  {
+    value - average;
+  }
 }
 
 // Use Jthreads to calculate sum of squares functions in parallel (3)
