@@ -7,11 +7,10 @@
 #include <algorithm>
 #include <boost/math/distributions/students_t.hpp>
 #include <cmath>
-#include <cstddef>
 #include <execution>
-#include <functional>
 #include <numeric>
 #include <random>
+#include <ranges>
 #include <span>
 #include <type_traits>
 #include <utility>
@@ -78,12 +77,12 @@ template<typename T>
 T
 calcSumOfSquares (const std::vector<T>& dataValues)
 {
-  T total = std::transform_reduce (std::execution::par,
-                                   dataValues.begin (),
-                                   dataValues.end (),
-                                   T {},
-                                   std::plus<> (),
-                                   [] (T value) { return value * value; });
+  T total {};
+  for (auto value : dataValues)
+  {
+    T squared = std::pow (value, 2);
+    total += squared;
+  }
 
   return total;
 }
@@ -94,15 +93,12 @@ T
 calcSumOfProducts (const std::vector<T>& firstValue,
                    const std::vector<T>& secondValue)
 {
-  const size_t n = std::min (firstValue.size (), secondValue.size ());
-  T total = std::transform_reduce (std::execution::par,
-                                   firstValue.begin (),
-                                   firstValue.begin () + n,
-                                   secondValue.begin (),
-                                   T {},
-                                   std::plus<> {},
-                                   std::multiplies<> {});
+  T total {};
 
+  for (auto [a, b] : std::views::zip (firstValue, secondValue))
+  {
+    total += a * b;
+  }
   return total;
 }
 
