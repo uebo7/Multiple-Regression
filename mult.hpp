@@ -123,11 +123,11 @@ calcSlopes (const T S11, T S22, T S12, T S1y, T S2y)
 
 template<typename T>
 T
-calcFinalSlope (const T ybar,
-                const T b1,
-                const T xbar1,
-                const T b2,
-                const T xbar2)
+calcIntercept (const T ybar,
+               const T b1,
+               const T xbar1,
+               const T b2,
+               const T xbar2)
 {
   return ybar - (b1 * xbar1) - (b2 * xbar2);
 }

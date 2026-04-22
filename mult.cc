@@ -64,7 +64,7 @@ main ()
   std::vector<type> y (N);
 
   int min { 1 };
-  int max { 100 };
+  int max { 5 };
   unsigned seed { 1 };
   fillRandom (std::span<type> { x1 }, min, max, seed);
   fillRandom (std::span<type> { x2 }, min, max, seed);
@@ -76,6 +76,7 @@ main ()
       [&]
       {
         avg1 = computeAverage (x1);
+        std::println ("print average: {}", avg1);
         findDataValues (x1, avg1);
       });
 
@@ -83,6 +84,7 @@ main ()
       [&]
       {
         avg2 = computeAverage (x2);
+        std::println ("print average: {}", avg2);
         findDataValues (x2, avg2);
       });
 
@@ -90,6 +92,7 @@ main ()
       [&]
       {
         avg3 = computeAverage (y);
+        std::println ("print average: {}", avg3);
         findDataValues (y, avg3);
       });
   }
@@ -105,15 +108,16 @@ main ()
     std::jthread sumproduct3 ([&] { prod3 = calcSumOfProducts (x1, y); });
   }
   auto [b1, b2] = calcSlopes (sum1, sum2, prod1, prod2, prod3);
-  type finalSlope;
-  finalSlope = calcFinalSlope (avg3, b1, avg1, b2, avg2);
-  // point estimate
-  //  type point =
-  computePointEstimate (sum3, b1, sum1, b2, sum2, prod2, prod3, prod1, N);
+  type intercept;
+  intercept = calcIntercept (avg3, b1, avg1, b2, avg2);
 
-  // std::println ("{}", x1);
-  // std::println ("{}", x2);
-  // std::println ("{}", y);
+  // point estimate
+  type point =
+    computePointEstimate (sum3, b1, sum1, b2, sum2, prod2, prod3, prod1, N);
+
+  std::println ("sum1 {}", sum1);
+  std::println ("sum2 {}", sum2);
+  std::println ("sum3 {}", sum3);
 
   std::println ("prod1: {}", prod1);
   std::println ("prod2: {}", prod2);
@@ -122,7 +126,9 @@ main ()
   std::println ("b1: {}", b1);
   std::println ("b2: {}", b2);
 
-  std::println ("finalSlope: {}", finalSlope);
+  std::println ("Intercept: {}", intercept);
+
+  std::println ("print pointestimate: {}", point);
 }
 
 /**************************************************************************/
