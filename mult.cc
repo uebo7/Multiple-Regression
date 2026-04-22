@@ -20,6 +20,7 @@
 
 /**************************************************************************/
 // include
+#include "Timer.hpp"
 #include <boost/math/distributions/students_t.hpp>
 #include <cmath>
 #include <iostream>
@@ -45,6 +46,14 @@ struct Input
 Input
 getInput ();
 
+template<typename T>
+void
+runParallel (std::vector<T> x1, std::vector<T> x2, std::vector<T> y);
+
+template<typename T>
+void
+runSerial (std::vector<T> x1, std::vector<T> x2, std::vector<T> y);
+
 void
 printResults ();
 
@@ -62,53 +71,15 @@ main ()
   std::vector<type> x2 (N);
   std::vector<type> y (N);
 
-  int min { 1 };
-  int max { 100 };
-  unsigned seed { 1 };
-  fillRandom (std::span<type> { x1 }, min, max, seed);
-  fillRandom (std::span<type> { x2 }, min, max, seed);
-  fillRandom (std::span<type> { y }, min, max, seed);
+  int min{1};
+  int max{100};
+  unsigned seed{1};
+  fillRandom (std::span<type>{x1}, min, max, seed);
+  fillRandom (std::span<type>{x2}, min, max, seed);
+  fillRandom (std::span<type>{y}, min, max, seed);
 
-  type avg1, avg2, avg3;
-  {
-    std::jthread t1 (
-      [&]
-      {
-        avg1 = computeAverage (x1);
-        findDataValues (x1, avg1);
-      });
-
-    std::jthread t2 (
-      [&]
-      {
-        avg2 = computeAverage (x2);
-        findDataValues (x2, avg2);
-      });
-
-    std::jthread t3 (
-      [&]
-      {
-        avg3 = computeAverage (y);
-        findDataValues (y, avg3);
-      });
-  }
-  type sum1, sum2, sum3;
-  type prod1, prod2, prod3;
-  {
-    std::jthread sumsquare1 ([&] { sum1 = calcSumOfSquares (x1); });
-    std::jthread sumsquare2 ([&] { sum2 = calcSumOfSquares (x2); });
-    std::jthread sumsquare3 ([&] { sum3 = calcSumOfSquares (y); });
-
-    std::jthread sumproduct1 ([&] { prod1 = calcSumOfProducts (x1, x2); });
-    std::jthread sumproduct2 ([&] { prod2 = calcSumOfProducts (x2, y); });
-    std::jthread sumproduct3 ([&] { prod3 = calcSumOfProducts (x1, y); });
-  }
-  auto [b1, b2] = calcSlopes (sum1, sum2, prod1, prod2, prod3);
-  type finalSlope;
-  finalSlope = calcFinalSlope (avg3, b1, avg1, b2, avg2);
-  // point estimate
-  //  type point =
-  computePointEstimate (sum3, b1, sum1, b2, sum2, prod2, prod3, prod1, N);
+  runParallel (x1, x2, y);
+  runSerial (x1, x2, y);
 
   // std::println ("{}", x1);
   // std::println ("{}", x2);
@@ -132,12 +103,97 @@ main ()
 Input
 getInput ()
 {
-  Input in {};
+  Input in{};
   std::print ("Size   ==> ");
   std::cin >> in.n;
   std::print ("alpha  ==> ");
   std::cin >> in.alpha;
   return in;
+}
+
+template<typename T>
+void
+runParallel (std::vector<T> x1, std::vector<T> x2, std::vector<T> y)
+{
+  Timer timer;
+  timer.start ();
+  type avg1, avg2, avg3;
+  {
+    std::jthread t1 (
+      [&]
+      {
+        avg1 = computeAverage (x1);
+        findDataValues (x1, avg1);
+      });
+    std::jthread t2 (
+      [&]
+      {
+        avg2 = computeAverage (x2);
+        findDataValues (x2, avg2);
+      });
+    std::jthread t3 (
+      [&]
+      {
+        avg3 = computeAverage (y);
+        findDataValues (y, avg3);
+      });
+  }
+  T sum1, sum2, sum3;
+  T prod1, prod2, prod3;
+  {
+    std::jthread sumsquare1 ([&] { sum1 = calcSumOfSquares (x1); });
+    std::jthread sumsquare2 ([&] { sum2 = calcSumOfSquares (x2); });
+    std::jthread sumsquare3 ([&] { sum3 = calcSumOfSquares (y); });
+
+    std::jthread sumproduct1 ([&] { prod1 = calcSumOfProducts (x1, x2); });
+    std::jthread sumproduct2 ([&] { prod2 = calcSumOfProducts (x2, y); });
+    std::jthread sumproduct3 ([&] { prod3 = calcSumOfProducts (x1, y); });
+  }
+  auto [b1, b2] = calcSlopes (sum1, sum2, prod1, prod2, prod3);
+  T finalSlope;
+  finalSlope = calcFinalSlope (avg3, b1, avg1, b2, avg2);
+  //point estimate
+  T point =
+    computePointEstimate (sum3, b1, sum1, b2, sum2, prod2, prod3, prod1, N);
+
+  timer.stop ();
+  auto time = timer.getElapsedTime ()
+    :
+
+    printResults ()
+    :
+}
+
+template<typename T>
+void
+runSerial (std::vector<T> x1, std::vector<T> x2, std::vector<T> y)
+{
+  Timer timer;
+  timer.start ();
+
+  T avg1 = computeAverage (x1);
+  findDataValues (x1, avg1);
+  T avg2 = computeAverage (x2);
+  findDataValues (x2, avg2);
+  T avg3 = computeAverage (y);
+  findDataValues (y, avg3);
+
+  T sum1 = calcSumOfSquares (x1);
+  T sum2 = calcSumOfSquares (x2);
+  T sum3 = calcSumOfSquares (y);
+
+  T prod1 = calcSumOfProducts (x1, x2);
+  T prod2 = calcSumOfProducts (x2, y);
+  T prod3 = calcSumOfProducts (x1, y);
+  auto [b1, b2] = calcSlopes (sum1, sum2, prod1, prod2, prod3);
+  T finalSlope = calcFinalSlope (avg3, b1, avg1, b2, avg2);
+  //point estimate
+  T point =
+    computePointEstimate (sum3, b1, sum1, b2, sum2, prod2, prod3, prod1, N);
+
+  timer.stop ();
+  timer.getElapsedMs ();
+  printResults ();
 }
 
 // print the confidence interval
