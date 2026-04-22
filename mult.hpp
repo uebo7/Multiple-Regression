@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <boost/math/distributions/students_t.hpp>
 #include <cmath>
+#include <execution>
+#include <numeric>
 #include <random>
 #include <ranges>
 #include <span>
@@ -52,11 +54,12 @@ template<typename T>
 T
 computeAverage (const std::vector<T>& dataValues)
 {
-  T total {};
-  for (T value : dataValues)
+  T total{0};
+  for (auto x : dataValues)
   {
-    total += value;
+    total += x;
   }
+
   return total / dataValues.size ();
 }
 
@@ -64,11 +67,9 @@ template<typename T>
 void
 findDataValues (std::vector<T>& dataValues, T average)
 {
-  T total {};
-
-  for (T value : dataValues)
+  for (auto x : dataValues)
   {
-    value - average;
+    x = x - average;
   }
 }
 
@@ -78,7 +79,7 @@ template<typename T>
 T
 calcSumOfSquares (const std::vector<T>& dataValues)
 {
-  T total {};
+  T total{};
   for (auto value : dataValues)
   {
     T squared = std::pow (value, 2);
@@ -94,7 +95,7 @@ T
 calcSumOfProducts (const std::vector<T>& firstValue,
                    const std::vector<T>& secondValue)
 {
-  T total {};
+  T total{};
 
   for (auto [a, b] : std::views::zip (firstValue, secondValue))
   {
@@ -120,10 +121,7 @@ calcSlopes (const T S11, T S22, T S12, T S1y, T S2y)
 
 template<typename T>
 T
-calcIntercept (const T ybar,
-               const T b1,
-               const T xbar1,
-               const T b2,
+calcIntercept (const T ybar, const T b1, const T xbar1, const T b2,
                const T xbar2)
 {
   return ybar - (b1 * xbar1) - (b2 * xbar2);
@@ -134,14 +132,7 @@ calcIntercept (const T ybar,
 // relies on this
 template<typename T>
 T
-computePointEstimate (T Syy,
-                      T b1,
-                      T S11,
-                      T b2,
-                      T S22,
-                      T S1y,
-                      T S2y,
-                      T S12,
+computePointEstimate (T Syy, T b1, T S11, T b2, T S22, T S1y, T S2y, T S12,
                       int N)
 {
   T SSE = Syy + b1 * b1 * S11 + b2 * b2 * S22 - 2 * b1 * S1y - 2 * b2 * S2y +
@@ -173,11 +164,11 @@ template<typename T>
 ConfidenceInterval<T>
 findConfidenceInt (T b, T se, double alpha, int N)
 {
-  int df { N - 3 };
+  int df{N - 3};
   boost::math::students_t dist (df);
-  double tAlphaOver2 = quantile (boost::math::complement (dist, alpha / 2));
+  T tAlphaOver2 = quantile (boost::math::complement (dist, alpha / 2));
 
-  ConfidenceInterval<T> ci = { b - tAlphaOver2 * se, b + tAlphaOver2 * se };
+  ConfidenceInterval<T> ci = {b - tAlphaOver2 * se, b + tAlphaOver2 * se};
 
   return ci;
 }
