@@ -209,5 +209,5 @@ printResults (const ConfidenceInterval<T> ce1, const ConfidenceInterval<T> ce2,
   std::println ("{} < B0 < {}", ce1.lower, ce1.upper);
   std::println ("{} < B1 < {}", ce2.lower, ce2.upper);
   std::println ("{} < B2 < {}", ce3.lower, ce3.upper);
-  std::println ("Time:  {}\n", time);
+  std::println ("Time:  {:.2f}\n", time);
 }
