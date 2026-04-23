@@ -99,8 +99,9 @@ main ()
   normalize (x2);
   normalize (y);
 
+  std::println ("PARALLEL");
   runParallel (x1, x2, y, input);
-  std::println ("");
+  std::println ("SERIAL");
   runSerial (x1, x2, y, input);
 }
 
@@ -230,8 +231,8 @@ void
 printResults (const ConfidenceInterval<T> ce1, const ConfidenceInterval<T> ce2,
               const ConfidenceInterval<T> ce3, const double time)
 {
-  std::println ("{} < B0 < {}", ce1.lower, ce1.upper);
-  std::println ("{} < B1 < {}", ce2.lower, ce2.upper);
-  std::println ("{} < B2 < {}", ce3.lower, ce3.upper);
+  std::println ("{:.3f} < B0 < {:.3f}", ce1.lower, ce1.upper);
+  std::println ("{:.3f} < B1 < {:.3f}", ce2.lower, ce2.upper);
+  std::println ("{:.3f} < B2 < {:.3f}", ce3.lower, ce3.upper);
   std::println ("Time:  {:.2f} ms\n", time);
 }
