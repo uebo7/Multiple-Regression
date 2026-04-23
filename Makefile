@@ -10,7 +10,7 @@ CXX := g++
 
 # C++ compiler flags
 # Use this first configuration for debugging
-CXXFLAGS := -Wall -Werror -std=c++26 -ggdb -O0
+CXXFLAGS := -Wall -Werror -std=c++26 -ggdb -O3
 # Use the following configuration for release
 # CXXFLAGS := -O3 -Wall -Werror -std=c++26
 
