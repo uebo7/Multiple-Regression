@@ -31,25 +31,20 @@ struct ConfidenceInterval
   T upper;
 };
 
+//O(n)
 template<typename T, typename U>
   requires std::is_arithmetic_v<T>
 void
 fillRandom (std::span<T> seq, U min, U max, unsigned seed)
 {
   static std::minstd_rand gen (seed);
-  if constexpr (std::is_floating_point_v<T>)
-  {
-    std::uniform_real_distribution<T> fDistribution (min, max);
-    std::ranges::generate (seq, [&] () { return fDistribution (gen); });
-  }
-  else
-  {
-    std::uniform_int_distribution<int> iDistribution (min, max);
-    std::ranges::generate (seq, [&] () { return iDistribution (gen); });
-  }
+
+  std::uniform_real_distribution<T> fDistribution (min, max);
+  std::ranges::generate (seq, [&] () { return fDistribution (gen); });
 }
 
 // uses jthreads to get average of all 3 columns of data in parallel
+//O(n)
 template<typename T>
 T
 computeAverage (const std::vector<T>& dataValues)
@@ -63,6 +58,7 @@ computeAverage (const std::vector<T>& dataValues)
   return total / dataValues.size ();
 }
 
+//O(n)
 template<typename T>
 void
 findDataValues (std::vector<T>& dataValues, T average)
@@ -75,6 +71,7 @@ findDataValues (std::vector<T>& dataValues, T average)
 
 // Use Jthreads to calculate sum of squares functions in parallel (3)
 // Requires averages from previous threads
+//O(n)
 template<typename T>
 T
 calcSumOfSquares (const std::vector<T>& dataValues)
@@ -90,6 +87,7 @@ calcSumOfSquares (const std::vector<T>& dataValues)
 }
 
 // Use Jthreads to calculate sum of products functions in parallel (3)
+//O(n)
 template<typename T>
 T
 calcSumOfProducts (const std::vector<T>& firstValue,
@@ -107,6 +105,7 @@ calcSumOfProducts (const std::vector<T>& firstValue,
 // Use Jthreads to calculate slopes and intercept
 // relies on previous data
 
+//O(1)
 template<typename T>
 std::pair<T, T>
 calcSlopes (const T S11, T S22, T S12, T S1y, T S2y)
@@ -121,6 +120,7 @@ calcSlopes (const T S11, T S22, T S12, T S1y, T S2y)
 
 template<typename T>
 T
+//O(1)
 calcIntercept (const T ybar, const T b1, const T xbar1, const T b2,
                const T xbar2)
 {
@@ -130,6 +130,7 @@ calcIntercept (const T ybar, const T b1, const T xbar1, const T b2,
 // Calculate point estimate
 // No threads needed one operation and relies on previous input. Next step
 // relies on this
+//O(1)
 template<typename T>
 T
 computePointEstimate (T Syy, T b1, T S11, T b2, T S22, T S1y, T S2y, T S12,
@@ -142,6 +143,7 @@ computePointEstimate (T Syy, T b1, T S11, T b2, T S22, T S1y, T S2y, T S12,
 }
 
 // Use Jthreads to compute Standard Error of 3 random variables
+//O(1)
 template<typename T>
 StandardErrors<T>
 computeStandardErr (T S, int N, T xbar1, T S22, T xbar2, T S11, T S12)
@@ -160,6 +162,7 @@ computeStandardErr (T S, int N, T xbar1, T S22, T xbar2, T S11, T S12)
 }
 
 // Use Jthreads to find confidence interval of Beta
+//O(1)
 template<typename T>
 ConfidenceInterval<T>
 findConfidenceInt (T b, T se, double alpha, int N)

@@ -79,7 +79,28 @@ main ()
   fillRandom (std::span<type>{x2}, min, max, seed);
   fillRandom (std::span<type>{y}, min, max, seed);
 
+  //needed
+  auto normalize = [] (auto& v)
+  {
+    auto mean = std::reduce (v.begin (), v.end ()) / v.size ();
+
+    auto var = std::transform_reduce (v.begin (), v.end (), 0.0, std::plus<> (),
+                                      [mean] (auto x)
+                                      { return (x - mean) * (x - mean); }) /
+               v.size ();
+
+    auto stddev = std::sqrt (var + 1e-12);
+
+    for (auto& x : v)
+      x = (x - mean) / stddev;
+  };
+
+  normalize (x1);
+  normalize (x2);
+  normalize (y);
+
   runParallel (x1, x2, y, input);
+  std::println ("");
   runSerial (x1, x2, y, input);
 }
 
@@ -93,7 +114,10 @@ getInput ()
 {
   Input in{};
   std::print ("Size   ==> ");
-  std::cin >> in.n;
+  std::string N;
+  std::cin >> N;
+  N.erase (std::remove (N.begin (), N.end (), '\''), N.end ());
+  in.n = std::stoul (N);
   std::print ("alpha  ==> ");
   std::cin >> in.alpha;
   return in;
@@ -167,16 +191,16 @@ runSerial (std::vector<T> x1, std::vector<T> x2, std::vector<T> y, Input in)
   Timer timer;
   timer.start ();
 
-  T avg1 = computeAverage (x1);
-  findDataValues (x1, avg1);
-  T avg2 = computeAverage (x2);
-  findDataValues (x2, avg2);
-  T avg3 = computeAverage (y);
-  findDataValues (y, avg3);
+  T avg1 = computeAverage (x1); //O(n)
+  findDataValues (x1, avg1);    //O(n)
+  T avg2 = computeAverage (x2); //O(n)
+  findDataValues (x2, avg2);    //O(n)
+  T avg3 = computeAverage (y);  //O(n)
+  findDataValues (y, avg3);     //O(n)
 
-  T sum1 = calcSumOfSquares (x1);
-  T sum2 = calcSumOfSquares (x2);
-  T sum3 = calcSumOfSquares (y);
+  T sum1 = calcSumOfSquares (x1); //O(n)
+  T sum2 = calcSumOfSquares (x2); //O(n)
+  T sum3 = calcSumOfSquares (y);  //O(n)
 
   T prod1 = calcSumOfProducts (x1, x2);
   T prod2 = calcSumOfProducts (x2, y);
@@ -206,8 +230,8 @@ void
 printResults (const ConfidenceInterval<T> ce1, const ConfidenceInterval<T> ce2,
               const ConfidenceInterval<T> ce3, const double time)
 {
-  std::println ("{} < B0 < {}", ce1.lower, ce1.upper);
-  std::println ("{} < B1 < {}", ce2.lower, ce2.upper);
-  std::println ("{} < B2 < {}", ce3.lower, ce3.upper);
-  std::println ("Time:  {}\n", time);
+  std::println ("{:.3f} < B0 < {:.3f}", ce1.lower, ce1.upper);
+  std::println ("{:.3f} < B1 < {:.3f}", ce2.lower, ce2.upper);
+  std::println ("{:.3f} < B2 < {:.3f}", ce3.lower, ce3.upper);
+  std::println ("Time:  {:.2f} ms", time);
 }
