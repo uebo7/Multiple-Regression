@@ -130,45 +130,44 @@ runParallel (std::vector<T> x1, std::vector<T> x2, std::vector<T> y, Input in)
 {
   Timer timer;
   timer.start ();
-  T avg1, avg2, avg3;
-  T sum1, sum2, sum3;
+  T xbar1, xbar2, ybar;
+  T S11, S22, Syy;
   {
     std::jthread t1 (
       [&]
       {
-        avg1 = computeAverage (x1);
-        findDataValues (x1, avg1);
-        sum1 = calcSumOfSquares (x1);
+        xbar1 = computeAverage (x1);
+        findDataValues (x1, xbar1);
+        S11 = calcSumOfSquares (x1);
       });
     std::jthread t2 (
       [&]
       {
-        avg2 = computeAverage (x2);
-        findDataValues (x2, avg2);
-        sum2 = calcSumOfSquares (x2);
+        xbar2 = computeAverage (x2);
+        findDataValues (x2, xbar2);
+        S22 = calcSumOfSquares (x2);
       });
     std::jthread t3 (
       [&]
       {
-        avg3 = computeAverage (y);
-        findDataValues (y, avg3);
-        sum3 = calcSumOfSquares (y);
+        ybar = computeAverage (y);
+        findDataValues (y, ybar);
+        Syy = calcSumOfSquares (y);
       });
   }
-  T prod1, prod2, prod3;
+  T S12, S1y, S2y;
   {
 
-    std::jthread sumproduct1 ([&] { prod1 = calcSumOfProducts (x1, x2); });
-    std::jthread sumproduct2 ([&] { prod2 = calcSumOfProducts (x2, y); });
-    std::jthread sumproduct3 ([&] { prod3 = calcSumOfProducts (x1, y); });
+    std::jthread sumproduct1 ([&] { S12 = calcSumOfProducts (x1, x2); });
+    std::jthread sumproduct2 ([&] { S1y = calcSumOfProducts (x2, y); });
+    std::jthread sumproduct3 ([&] { S2y = calcSumOfProducts (x1, y); });
   }
-  auto [b1, b2] = calcSlopes (sum1, sum2, prod1, prod2, prod3);
-  T intercept = calcIntercept (avg3, b1, avg1, b2, avg2);
+  auto [b1, b2] = calcSlopes (S11, S22, S12, S1y, S2y);
+  T intercept = calcIntercept (ybar, b1, xbar1, b2, xbar2);
   // point estimate
-  T point =
-    computePointEstimate (sum3, b1, sum1, b2, sum2, prod2, prod3, prod1, in.n);
+  T point = computePointEstimate (Syy, b1, S11, b2, S22, S1y, S2y, S12, in.n);
   StandardErrors<T> standardErr =
-    computeStandardErr (point, in.n, avg1, sum2, avg2, sum1, prod1);
+    computeStandardErr (point, in.n, xbar1, S22, xbar2, S11, S12);
   ConfidenceInterval<T> ce1, ce2, ce3;
   {
     std::jthread confidenceInterval1 (
@@ -192,27 +191,26 @@ runSerial (std::vector<T> x1, std::vector<T> x2, std::vector<T> y, Input in)
   Timer timer;
   timer.start ();
 
-  T avg1 = computeAverage (x1); //O(n)
-  findDataValues (x1, avg1);    //O(n)
-  T avg2 = computeAverage (x2); //O(n)
-  findDataValues (x2, avg2);    //O(n)
-  T avg3 = computeAverage (y);  //O(n)
-  findDataValues (y, avg3);     //O(n)
+  T xbar1 = computeAverage (x1);
+  findDataValues (x1, xbar1);
+  T xbar2 = computeAverage (x2);
+  findDataValues (x2, xbar2);
+  T ybar = computeAverage (y);
+  findDataValues (y, ybar);
 
-  T sum1 = calcSumOfSquares (x1); //O(n)
-  T sum2 = calcSumOfSquares (x2); //O(n)
-  T sum3 = calcSumOfSquares (y);  //O(n)
+  T S11 = calcSumOfSquares (x1);
+  T S22 = calcSumOfSquares (x2);
+  T Syy = calcSumOfSquares (y);
 
-  T prod1 = calcSumOfProducts (x1, x2);
-  T prod2 = calcSumOfProducts (x2, y);
-  T prod3 = calcSumOfProducts (x1, y);
-  auto [b1, b2] = calcSlopes (sum1, sum2, prod1, prod2, prod3);
-  T intercept = calcIntercept (avg3, b1, avg1, b2, avg2);
+  T S12 = calcSumOfProducts (x1, x2);
+  T S1y = calcSumOfProducts (x2, y);
+  T S2y = calcSumOfProducts (x1, y);
+  auto [b1, b2] = calcSlopes (S11, S22, S12, S1y, S2y);
+  T intercept = calcIntercept (ybar, b1, xbar1, b2, xbar2);
   // point estimate
-  T point =
-    computePointEstimate (sum3, b1, sum1, b2, sum2, prod2, prod3, prod1, in.n);
+  T point = computePointEstimate (Syy, b1, S11, b2, S22, S1y, S2y, S12, in.n);
   StandardErrors<T> standardErr =
-    computeStandardErr (point, in.n, avg1, sum2, avg2, sum1, prod1);
+    computeStandardErr (point, in.n, xbar1, S22, xbar2, S11, S12);
   ConfidenceInterval<T> ce1 =
     findConfidenceInt (b1, standardErr.B0, in.alpha, in.n);
   ConfidenceInterval<T> ce2 =
